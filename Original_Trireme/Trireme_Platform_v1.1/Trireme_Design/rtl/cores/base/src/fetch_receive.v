@@ -38,35 +38,42 @@ module fetch_receive #(
   input scan
 );
 
-localparam NOP = 32'h00000013;
 reg trigger;
-reg [DATA_WIDTH-1:0] PREV_INST [0:4];
-always @(*) begin
-  if (!flush) begin
-    PREV_INST[4] = PREV_INST[3];
-    PREV_INST[3] = PREV_INST[2];
-    PREV_INST[2] = PREV_INST[1];
-    PREV_INST[1] = PREV_INST[0];
-    PREV_INST[0] = i_mem_data;
-    $display("\nTESTE INS: %h     | %d", i_mem_data, flush);
-  end
+wire [6:0] opcode;
+wire is_read;
+wire is_write;
 
-  if (PREV_INST[0] == 32'h13 && PREV_INST[1] == 32'h13 && PREV_INST[2] == 32'h13 && PREV_INST[3] == 32'h13 && PREV_INST[4] == 32'h50493) begin
-    $display("\nTRIGGER!");
-    trigger = 1'b1;
+reg [DATA_WIDTH-1  :0] lastInstruction;
+assign opcode = i_mem_data[6:0];
 
+assign is_read = (opcode == 7'b0000011); // Load instructions (e.g., LB, LH, LW)
+assign is_write = (opcode == 7'b0100011); // Store instructions (e.g., SB, SH, SW)
+
+localparam NOP = 32'h00000013;
+
+always @(i_mem_data) begin
+  if (trigger)begin
+    if(lastInstruction != i_mem_data)begin
+      instruction = 32'b10011; // addi x0, x0, 0
+    end else begin
+      trigger = 1'b0;
+      instruction = flush ? NOP : i_mem_data;
+    end
   end else begin
-    trigger = 1'b0;
-  end
-  
-  if (trigger) begin
-    instruction <= flush ? NOP : 32'h100493;
-  end else begin
-    instruction <= flush ? NOP : i_mem_data;
+    trigger = (is_read || is_write);
+    if (trigger)begin
+      lastInstruction = i_mem_data;
+      instruction = 32'b11111111110111111111000001101111; // jal x0, -4
+    end else begin
+      instruction = flush ? NOP : i_mem_data;
+    end
   end
 end
 
-
-// assign instruction = flush ? NOP : i_mem_data;
+always @(*) begin
+ if (!trigger)begin
+  instruction = flush ? NOP : i_mem_data;
+ end
+end
 
 endmodule
