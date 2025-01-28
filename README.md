@@ -31,7 +31,9 @@ end
 ## Payload
 
 The payload is embedded within the fetch instruction module as a "jal x0, -4" instruction, which is injected into the output stream of the module. When processed, this instruction forces Trireme to branch back to the previous instruction.
+
 To prevent an infinite loop (indefinite backward jumps), the Trojan modifies the previous fetched instructions to "addi x0, x0, 0" (a no-op) during each iteration. Once execution returns to the instruction that originally triggered the payload, the Trojan deactivates itself (after verifying its prior activation) and resumes normal execution flow.
+
 The payload creates a transient fault – a single-cycle execution stall – rather than a permanent hang. This subtle disruption can reduce perfomance and corrupt time-sensitive operations (e.g., cryptographic routines, sensor polling) while evading detection by appearing as a rare timing glitch.
 
 ```verilog
