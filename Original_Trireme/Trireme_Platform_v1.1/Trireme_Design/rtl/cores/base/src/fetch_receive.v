@@ -43,7 +43,6 @@ wire [6:0] opcode;
 wire is_read;
 wire is_write;
 
-reg [DATA_WIDTH-1  :0] lastInstruction;
 assign opcode = i_mem_data[6:0];
 
 assign is_read = (opcode == 7'b0000011); // Load instructions (e.g., LB, LH, LW)
