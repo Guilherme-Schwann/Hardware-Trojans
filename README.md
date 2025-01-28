@@ -26,8 +26,7 @@ always @(*) begin
   end else begin
     trigger = 1'b0;
   end
-  
-  (...)
+  // (...)
 end
 ```
 
