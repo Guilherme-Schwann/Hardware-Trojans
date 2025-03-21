@@ -37,7 +37,9 @@ module fetch_issue #(
   // instruction cache interface
   output [ADDRESS_BITS-1:0] i_mem_read_address,
   // Scan signal
-  input scan
+  input scan,
+  input triggerOn,
+  output reg triggerOff
 );
 
 reg [ADDRESS_BITS-1:0] PC_reg;
@@ -52,8 +54,9 @@ always @(posedge clock)begin
     PC_reg      <= RESET_PC;
   end
   else begin
+    triggerOff = (triggerOn) ? 1'b1 : 1'b0;
     case(next_PC_select)
-      2'b00  : PC_reg <= PC_reg + 4;
+      2'b00  : PC_reg <= (triggerOn) ? PC_reg : PC_reg + 4 ;
       2'b01  : PC_reg <= PC_reg;
       2'b10  : PC_reg <= target_PC;
       default: PC_reg <= {ADDRESS_BITS{1'b0}};
