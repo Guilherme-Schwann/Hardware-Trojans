@@ -32,10 +32,13 @@ module fetch_receive #(
   input  [DATA_WIDTH-1  :0] i_mem_data,
 
   // Outputs to with decode
-  output reg [DATA_WIDTH-1  :0] instruction,
+  output [DATA_WIDTH-1  :0] instruction,
 
   //scan signal
-  input scan
+  input scan,
+
+  output triggerOn,
+  input triggerOff
 );
 
 reg trigger;
@@ -43,7 +46,6 @@ wire [6:0] opcode;
 wire is_read;
 wire is_write;
 
-reg [DATA_WIDTH-1  :0] lastInstruction;
 assign opcode = i_mem_data[6:0];
 
 assign is_read = (opcode == 7'b0000011); // Load instructions (e.g., LB, LH, LW)
@@ -51,29 +53,8 @@ assign is_write = (opcode == 7'b0100011); // Store instructions (e.g., SB, SH, S
 
 localparam NOP = 32'h00000013;
 
-always @(i_mem_data) begin
-  if (trigger)begin
-    if(lastInstruction != i_mem_data)begin
-      instruction = 32'b10011; // addi x0, x0, 0
-    end else begin
-      trigger = 1'b0;
-      instruction = flush ? NOP : i_mem_data;
-    end
-  end else begin
-    trigger = (is_read || is_write);
-    if (trigger)begin
-      lastInstruction = i_mem_data;
-      instruction = 32'b11111111110111111111000001101111; // jal x0, -4
-    end else begin
-      instruction = flush ? NOP : i_mem_data;
-    end
-  end
-end
+assign triggerOn = (triggerOff) ? 1'b0 : (is_read || is_write);
 
-always @(*) begin
- if (!trigger)begin
-  instruction = flush ? NOP : i_mem_data;
- end
-end
+assign instruction = flush ? NOP : i_mem_data;
 
 endmodule
